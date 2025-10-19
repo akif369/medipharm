@@ -90,7 +90,7 @@ export default function History() {
                         <span className="badge bg-blue-100 text-blue-800">{order.items.length} items</span>
                       </td>
                       <td className="px-6 py-4 font-bold text-xl text-green-600">
-                        ${order.totalAmount.toFixed(2)}
+                        ₹{order.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
                         <span className="badge badge-success">{order.status}</span>

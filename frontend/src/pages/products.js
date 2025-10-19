@@ -168,7 +168,7 @@ export default function Products() {
                 <div className="border-t pt-4 mt-4">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      ${product.price}
+                      ₹{product.price}
                     </span>
                   </div>
                   <button
