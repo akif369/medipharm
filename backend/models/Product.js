@@ -26,6 +26,11 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  rackNo: {
+    type: String,
+    required: true,
+    default: 'A1'
+  },
   expiryDate: {
     type: Date
   },
@@ -38,5 +43,12 @@ const ProductSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Create indexes for better search performance
+ProductSchema.index({ name: 'text', description: 'text', manufacturer: 'text' });
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ price: 1 });
+ProductSchema.index({ stock: 1 });
+ProductSchema.index({ rackNo: 1 });
 
 module.exports = mongoose.model('Product', ProductSchema);

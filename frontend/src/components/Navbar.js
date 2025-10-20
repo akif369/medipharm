@@ -34,6 +34,9 @@ export default function Navbar({ user, cartCount, onCartClick }) {
                 <Link href="/admin" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
                   Admin
                 </Link>
+                <Link href="/admin/users" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                  Users
+                </Link>
                 <Link href="/admin/history" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
                   History
                 </Link>
@@ -55,12 +58,17 @@ export default function Navbar({ user, cartCount, onCartClick }) {
             )}
             
             {user && (
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition-all active:scale-95"
-              >
-                Logout
-              </button>
+              <>
+                <Link href="/profile" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                  👤 Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition-all active:scale-95"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -18,6 +18,7 @@ export default function Admin() {
     price: '',
     stock: '',
     manufacturer: '',
+    rackNo: '',
     expiryDate: ''
   });
 
@@ -58,6 +59,7 @@ export default function Admin() {
         price: '',
         stock: '',
         manufacturer: '',
+        rackNo: '',
         expiryDate: ''
       });
       fetchProducts();
@@ -75,6 +77,7 @@ export default function Admin() {
       price: product.price,
       stock: product.stock,
       manufacturer: product.manufacturer,
+      rackNo: product.rackNo,
       expiryDate: product.expiryDate ? product.expiryDate.split('T')[0] : ''
     });
     setShowModal(true);
@@ -128,6 +131,7 @@ export default function Admin() {
                 <tr>
                   <th className="px-6 py-4 text-left font-bold">Name</th>
                   <th className="px-6 py-4 text-left font-bold">Category</th>
+                  <th className="px-6 py-4 text-left font-bold">Rack No.</th>
                   <th className="px-6 py-4 text-left font-bold">Price</th>
                   <th className="px-6 py-4 text-left font-bold">Stock</th>
                   <th className="px-6 py-4 text-left font-bold">Manufacturer</th>
@@ -140,9 +144,17 @@ export default function Admin() {
                   <tr key={product._id} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-gray-800">{product.name}</td>
                     <td className="px-6 py-4 text-gray-600">{product.category}</td>
-                    <td className="px-6 py-4 font-bold text-green-600">₹{product.price}</td>
                     <td className="px-6 py-4">
-                      <span className={`badge ${product.stock > 10 ? 'badge-success' : 'badge-warning'}`}>
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">
+                        {product.rackNo}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-green-600">${product.price}</td>
+                    <td className="px-6 py-4">
+                      <span className={`badge ${
+                        product.stock > 10 ? 'badge-success' : 
+                        product.stock > 0 ? 'badge-warning' : 'badge-danger'
+                      }`}>
                         {product.stock}
                       </span>
                     </td>
@@ -222,7 +234,21 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="label">Price (₹)</label>
+                  <label className="label">Rack Number</label>
+                  <input
+                    type="text"
+                    value={formData.rackNo}
+                    onChange={(e) => setFormData({...formData, rackNo: e.target.value})}
+                    required
+                    className="input"
+                    placeholder="e.g., A1, B5, C12"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Price ($)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -233,9 +259,7 @@ export default function Admin() {
                     placeholder="0.00"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Stock (units)</label>
                   <input
@@ -245,6 +269,20 @@ export default function Admin() {
                     required
                     className="input"
                     placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Manufacturer</label>
+                  <input
+                    type="text"
+                    value={formData.manufacturer}
+                    onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+                    required
+                    className="input"
+                    placeholder="Enter manufacturer name"
                   />
                 </div>
 
@@ -257,18 +295,6 @@ export default function Admin() {
                     className="input"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="label">Manufacturer</label>
-                <input
-                  type="text"
-                  value={formData.manufacturer}
-                  onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
-                  required
-                  className="input"
-                  placeholder="Enter manufacturer name"
-                />
               </div>
 
               <div className="flex gap-3 pt-4">
