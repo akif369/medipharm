@@ -53,7 +53,8 @@ router.post('/', auth, async (req, res) => {
       user: req.user.id,
       items: orderItems,
       totalAmount,
-      shippingAddress: user.address
+      shippingAddress: user.address,
+      status: 'pending' // Changed from 'completed' to 'pending'
     });
 
     const order = await newOrder.save();
@@ -94,6 +95,38 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route   GET api/orders/stats
+// @desc    Get order statistics (Admin only)
+// @access  Private (Admin)
+router.get('/stats', [auth, admin], async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments();
+    const pendingOrders = await Order.countDocuments({ status: 'pending' });
+    const completedOrders = await Order.countDocuments({ status: 'completed' });
+    const cancelledOrders = await Order.countDocuments({ status: 'cancelled' });
+    const processingOrders = await Order.countDocuments({ status: 'processing' });
+    const shippedOrders = await Order.countDocuments({ status: 'shipped' });
+
+    const totalRevenue = await Order.aggregate([
+      { $match: { status: { $in: ['completed', 'shipped'] } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    ]);
+
+    res.json({
+      totalOrders,
+      pendingOrders,
+      completedOrders,
+      cancelledOrders,
+      processingOrders,
+      shippedOrders,
+      totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 // @route   GET api/orders/:id
 // @desc    Get order by ID
 // @access  Private
@@ -113,6 +146,78 @@ router.get('/:id', auth, async (req, res) => {
     }
 
     res.json(order);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   PUT api/orders/:id/status
+// @desc    Update order status (Admin only)
+// @access  Private (Admin)
+router.put('/:id/status', [auth, admin], async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const validStatuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ msg: 'Invalid status value' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ msg: 'Order not found' });
+    }
+
+    // If cancelling order, restore stock
+    if (status === 'cancelled' && order.status !== 'cancelled') {
+      for (let item of order.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
+    order.status = status;
+    order.updatedAt = Date.now();
+    await order.save();
+
+    const updatedOrder = await Order.findById(order._id)
+      .populate('items.product')
+      .populate('user', 'username email phoneNumber address');
+
+    res.json(updatedOrder);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   DELETE api/orders/:id
+// @desc    Delete order (Admin only)
+// @access  Private (Admin)
+router.delete('/:id', [auth, admin], async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ msg: 'Order not found' });
+    }
+
+    // Restore stock if order is being deleted
+    if (order.status !== 'cancelled') {
+      for (let item of order.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
+    await order.deleteOne();
+    res.json({ msg: 'Order removed and stock restored' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

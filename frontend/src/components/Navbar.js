@@ -29,7 +29,7 @@ export default function Navbar({ user, cartCount, onCartClick }) {
               Products
             </Link>
             
-            {user?.role === 'admin' && (
+            {user?.role === 'admin' ? (
               <>
                 <Link href="/admin" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
                   Admin
@@ -38,9 +38,13 @@ export default function Navbar({ user, cartCount, onCartClick }) {
                   Users
                 </Link>
                 <Link href="/admin/history" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
-                  History
+                  All Orders
                 </Link>
               </>
+            ) : (
+              <Link href="/orders" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                My Orders
+              </Link>
             )}
             
             {cartCount !== undefined && (

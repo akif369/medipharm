@@ -11,6 +11,8 @@ export default function History() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [changingStatus, setChangingStatus] = useState(false);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     const { user: authUser } = getAuth();
@@ -19,6 +21,7 @@ export default function History() {
     } else {
       setUser(authUser);
       fetchOrders();
+      fetchStats();
     }
     setLoading(false);
   }, [router]);
@@ -32,12 +35,85 @@ export default function History() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await API.get('/orders/stats');
+      setStats(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleViewUserProfile = async (userId) => {
     try {
       const res = await API.get(`/users/${userId}`);
       setSelectedUserProfile(res.data);
     } catch (err) {
       alert('Error fetching user profile');
+    }
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+      return;
+    }
+
+    setChangingStatus(true);
+    try {
+      await API.put(`/orders/${orderId}/status`, { status: newStatus });
+      
+      // Update the order in the list
+      setOrders(orders.map(order => 
+        order._id === orderId 
+          ? { ...order, status: newStatus, updatedAt: new Date() }
+          : order
+      ));
+
+      // Update selected order if it's open
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus, updatedAt: new Date() });
+      }
+
+      fetchStats(); // Refresh statistics
+      alert('Order status updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Error updating order status');
+    } finally {
+      setChangingStatus(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return '⏳';
+      case 'processing':
+        return '⚙️';
+      case 'shipped':
+        return '🚚';
+      case 'completed':
+        return '✅';
+      case 'cancelled':
+        return '❌';
+      default:
+        return '📦';
     }
   };
 
@@ -63,8 +139,42 @@ export default function History() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-8">
-          📋 Purchase History
+          📋 All Orders
         </h2>
+
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+            <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-4">
+              <p className="text-sm text-gray-600">Total Orders</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.totalOrders}</p>
+            </div>
+            <div className="bg-yellow-50 rounded-xl shadow-lg p-4">
+              <p className="text-sm text-yellow-700">⏳ Pending</p>
+              <p className="text-2xl font-bold text-yellow-800">{stats.pendingOrders}</p>
+            </div>
+            <div className="bg-blue-50 rounded-xl shadow-lg p-4">
+              <p className="text-sm text-blue-700">⚙️ Processing</p>
+              <p className="text-2xl font-bold text-blue-800">{stats.processingOrders}</p>
+            </div>
+            <div className="bg-purple-50 rounded-xl shadow-lg p-4">
+              <p className="text-sm text-purple-700">🚚 Shipped</p>
+              <p className="text-2xl font-bold text-purple-800">{stats.shippedOrders}</p>
+            </div>
+            <div className="bg-green-50 rounded-xl shadow-lg p-4">
+              <p className="text-sm text-green-700">✅ Completed</p>
+              <p className="text-2xl font-bold text-green-800">{stats.completedOrders}</p>
+            </div>
+            <div className="bg-red-50 rounded-xl shadow-lg p-4">
+              <p className="text-sm text-red-700">❌ Cancelled</p>
+              <p className="text-2xl font-bold text-red-800">{stats.cancelledOrders}</p>
+            </div>
+            <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-xl shadow-lg p-4 text-white">
+              <p className="text-sm">💰 Revenue</p>
+              <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+            </div>
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-16 text-center">
@@ -81,7 +191,7 @@ export default function History() {
                     <th className="px-6 py-4 text-left font-bold">Customer</th>
                     <th className="px-6 py-4 text-left font-bold">Date</th>
                     <th className="px-6 py-4 text-left font-bold">Items</th>
-                    <th className="px-6 py-4 text-left font-bold">Total Amount</th>
+                    <th className="px-6 py-4 text-left font-bold">Total</th>
                     <th className="px-6 py-4 text-left font-bold">Status</th>
                     <th className="px-6 py-4 text-left font-bold">Actions</th>
                   </tr>
@@ -100,24 +210,26 @@ export default function History() {
                           {order.user?.username || 'N/A'}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-gray-600">
+                      <td className="px-6 py-4 text-gray-600 text-sm">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="badge bg-blue-100 text-blue-800">{order.items.length} items</span>
+                        <span className="badge bg-blue-100 text-blue-800">{order.items.length}</span>
                       </td>
                       <td className="px-6 py-4 font-bold text-xl text-green-600">
                         ${order.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="badge badge-success">{order.status}</span>
+                        <span className={`badge ${getStatusColor(order.status)} px-3 py-1`}>
+                          {getStatusIcon(order.status)} {order.status.toUpperCase()}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
                           onClick={() => setSelectedOrder(order)}
                           className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm px-4 py-2 rounded-lg hover:from-blue-600 hover:to-indigo-600 font-medium shadow-md active:scale-95 transition-all"
                         >
-                          View Details
+                          View & Manage
                         </button>
                       </td>
                     </tr>
@@ -129,15 +241,36 @@ export default function History() {
         )}
       </div>
 
-      {/* Order Details Modal */}
+      {/* Order Details Modal with Status Management */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slideUp" onClick={() => setSelectedOrder(null)}>
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-5 rounded-t-2xl">
-              <h2 className="text-2xl font-bold">📦 Order Details</h2>
+              <h2 className="text-2xl font-bold">📦 Order Management</h2>
             </div>
             
             <div className="p-6">
+              {/* Status Change Section */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl mb-6 border-2 border-purple-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Change Order Status</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {['pending', 'processing', 'shipped', 'completed', 'cancelled'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => handleStatusChange(selectedOrder._id, status)}
+                      disabled={changingStatus || selectedOrder.status === status}
+                      className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                        selectedOrder.status === status
+                          ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 active:scale-95'
+                      }`}
+                    >
+                      {getStatusIcon(status)} {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <p className="text-sm text-gray-500 mb-1">Order ID</p>
@@ -157,14 +290,16 @@ export default function History() {
                   <p className="text-sm text-gray-600">{selectedOrder.user?.email}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-500 mb-1">Date</p>
+                  <p className="text-sm text-gray-500 mb-1">Order Date</p>
                   <p className="font-bold text-lg text-gray-800">
                     {new Date(selectedOrder.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-500 mb-1">Status</p>
-                  <span className="badge badge-success text-lg px-4 py-2">{selectedOrder.status}</span>
+                  <p className="text-sm text-gray-500 mb-1">Current Status</p>
+                  <span className={`badge ${getStatusColor(selectedOrder.status)} text-lg px-4 py-2`}>
+                    {getStatusIcon(selectedOrder.status)} {selectedOrder.status.toUpperCase()}
+                  </span>
                 </div>
               </div>
 
@@ -205,7 +340,7 @@ export default function History() {
                     {selectedOrder.items.map((item, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium text-gray-800">
-                          {item.product?.name || 'Deleted Product'}
+                          {item.product?.name || 'Product deleted'}
                         </td>
                         <td className="px-4 py-3 text-gray-600">{item.quantity}</td>
                         <td className="px-4 py-3 text-gray-600">${item.price.toFixed(2)}</td>
@@ -238,7 +373,7 @@ export default function History() {
         </div>
       )}
 
-      {/* User Profile Modal */}
+      {/* User Profile Modal - Same as before */}
       {selectedUserProfile && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slideUp" onClick={() => setSelectedUserProfile(null)}>
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
