@@ -171,7 +171,7 @@ export default function History() {
             </div>
             <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-xl shadow-lg p-4 text-white">
               <p className="text-sm">💰 Revenue</p>
-              <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">₹{stats.totalRevenue.toFixed(2)}</p>
             </div>
           </div>
         )}
@@ -217,7 +217,7 @@ export default function History() {
                         <span className="badge bg-blue-100 text-blue-800">{order.items.length}</span>
                       </td>
                       <td className="px-6 py-4 font-bold text-xl text-green-600">
-                        ${order.totalAmount.toFixed(2)}
+                        ₹{order.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`badge ${getStatusColor(order.status)} px-3 py-1`}>
@@ -343,9 +343,9 @@ export default function History() {
                           {item.product?.name || 'Product deleted'}
                         </td>
                         <td className="px-4 py-3 text-gray-600">{item.quantity}</td>
-                        <td className="px-4 py-3 text-gray-600">${item.price.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-gray-600">₹{item.price.toFixed(2)}</td>
                         <td className="px-4 py-3 font-bold text-green-600">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -357,7 +357,7 @@ export default function History() {
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-medium text-gray-700">Total Amount:</span>
                   <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    ${selectedOrder.totalAmount.toFixed(2)}
+                    ₹{selectedOrder.totalAmount.toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -253,7 +253,7 @@ const handleCheckout = async () => {
 
                 {/* Min Price Filter */}
                 <div>
-                  <label className="label">Min Price ($)</label>
+                  <label className="label">Min Price (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -266,7 +266,7 @@ const handleCheckout = async () => {
 
                 {/* Max Price Filter */}
                 <div>
-                  <label className="label">Max Price ($)</label>
+                  <label className="label">Max Price (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -338,7 +338,7 @@ const handleCheckout = async () => {
             )}
             {(filters.minPrice || filters.maxPrice) && (
               <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                Price: ${filters.minPrice || '0'} - ${filters.maxPrice || '∞'}
+                Price: ₹{filters.minPrice || '0'} - ₹{filters.maxPrice || '∞'}
               </span>
             )}
           </div>
@@ -406,7 +406,7 @@ const handleCheckout = async () => {
                 <div className="border-t pt-4 mt-4">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      ${product.price}
+                      ₹{product.price}
                     </span>
                   </div>
                   <button
@@ -444,7 +444,7 @@ const handleCheckout = async () => {
                       <div key={item.product} className="flex items-center justify-between p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
                         <div className="flex-1">
                           <h3 className="font-bold text-gray-800 text-lg">{item.name}</h3>
-                          <p className="text-gray-600">${item.price} each</p>
+                          <p className="text-gray-600">₹{item.price} each</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <button

@@ -65,6 +65,16 @@ export default function Home() {
                 <p className="text-blue-100">View and order medical supplies</p>
               </div>
             </Link>
+
+             {user.role === 'user' && (
+              <Link href="/orders">
+              <div className="group bg-gradient-to-br from-violet-500 to-violet-600 text-white p-8 rounded-xl hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-1">
+                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🛩️</div>
+                <h3 className="text-2xl font-bold mb-2">Order History</h3>
+                <p className="text-blue-100">View all Order History and Details</p>
+              </div>
+            </Link>
+            )}
             
             {user.role === 'admin' && (
               <Link href="/admin">

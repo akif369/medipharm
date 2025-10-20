@@ -124,7 +124,7 @@ export default function Orders() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Total</p>
-                    <p className="font-bold text-2xl text-green-600">${order.totalAmount.toFixed(2)}</p>
+                    <p className="font-bold text-2xl text-green-600">₹{order.totalAmount.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Status</p>
@@ -143,7 +143,7 @@ export default function Orders() {
                           {item.product?.name || 'Product deleted'} x {item.quantity}
                         </span>
                         <span className="font-semibold text-gray-800">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -241,9 +241,9 @@ export default function Orders() {
                           {item.product?.name || 'Product deleted'}
                         </td>
                         <td className="px-4 py-3 text-gray-600">{item.quantity}</td>
-                        <td className="px-4 py-3 text-gray-600">${item.price.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-gray-600">₹{item.price.toFixed(2)}</td>
                         <td className="px-4 py-3 font-bold text-green-600">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -255,7 +255,7 @@ export default function Orders() {
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-medium text-gray-700">Total Amount:</span>
                   <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    ${selectedOrder.totalAmount.toFixed(2)}
+                    ₹{selectedOrder.totalAmount.toFixed(2)}
                   </span>
                 </div>
               </div>

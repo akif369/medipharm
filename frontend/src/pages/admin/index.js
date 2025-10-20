@@ -227,7 +227,7 @@ export default function Admin() {
                         {product.rackNo}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-bold text-green-600">${product.price}</td>
+                    <td className="px-6 py-4 font-bold text-green-600">₹{product.price}</td>
                     <td className="px-6 py-4">
                       <span className={`badge ${
                         product.stock > 10 ? 'badge-success' : 
@@ -409,7 +409,7 @@ export default function Admin() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Price ($)</label>
+                  <label className="label">Price (₹)</label>
                   <input
                     type="number"
                     step="0.01"
