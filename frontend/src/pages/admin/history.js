@@ -10,6 +10,7 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
 
   useEffect(() => {
     const { user: authUser } = getAuth();
@@ -28,6 +29,15 @@ export default function History() {
       setOrders(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleViewUserProfile = async (userId) => {
+    try {
+      const res = await API.get(`/users/${userId}`);
+      setSelectedUserProfile(res.data);
+    } catch (err) {
+      alert('Error fetching user profile');
     }
   };
 
@@ -82,7 +92,14 @@ export default function History() {
                       <td className="px-6 py-4 font-mono text-sm font-semibold text-gray-700">
                         #{order._id.slice(-6)}
                       </td>
-                      <td className="px-6 py-4 font-medium text-gray-800">{order.user?.username || 'N/A'}</td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleViewUserProfile(order.user._id)}
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {order.user?.username || 'N/A'}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 text-gray-600">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
@@ -90,7 +107,7 @@ export default function History() {
                         <span className="badge bg-blue-100 text-blue-800">{order.items.length} items</span>
                       </td>
                       <td className="px-6 py-4 font-bold text-xl text-green-600">
-                        ₹{order.totalAmount.toFixed(2)}
+                        ${order.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
                         <span className="badge badge-success">{order.status}</span>
@@ -128,7 +145,15 @@ export default function History() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <p className="text-sm text-gray-500 mb-1">Customer</p>
-                  <p className="font-bold text-lg text-gray-800">{selectedOrder.user?.username}</p>
+                  <button
+                    onClick={() => {
+                      handleViewUserProfile(selectedOrder.user._id);
+                      setSelectedOrder(null);
+                    }}
+                    className="font-bold text-lg text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {selectedOrder.user?.username}
+                  </button>
                   <p className="text-sm text-gray-600">{selectedOrder.user?.email}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">
@@ -142,6 +167,28 @@ export default function History() {
                   <span className="badge badge-success text-lg px-4 py-2">{selectedOrder.status}</span>
                 </div>
               </div>
+
+              {/* Shipping Address */}
+              {selectedOrder.shippingAddress && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border-2 border-blue-200">
+                  <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    📍 Shipping Address
+                  </h3>
+                  <div className="text-gray-700 space-y-1">
+                    {selectedOrder.shippingAddress.street && (
+                      <p>{selectedOrder.shippingAddress.street}</p>
+                    )}
+                    <p>
+                      {selectedOrder.shippingAddress.city}
+                      {selectedOrder.shippingAddress.state && `, ${selectedOrder.shippingAddress.state}`}
+                      {selectedOrder.shippingAddress.zipCode && ` ${selectedOrder.shippingAddress.zipCode}`}
+                    </p>
+                    {selectedOrder.shippingAddress.country && (
+                      <p>{selectedOrder.shippingAddress.country}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <h3 className="text-2xl font-bold text-gray-800 mb-4">Order Items</h3>
               <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden mb-6">
@@ -182,6 +229,76 @@ export default function History() {
 
               <button
                 onClick={() => setSelectedOrder(null)}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-xl hover:from-blue-600 hover:to-indigo-600 font-bold shadow-lg active:scale-95 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {selectedUserProfile && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slideUp" onClick={() => setSelectedUserProfile(null)}>
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-5 rounded-t-2xl">
+              <h2 className="text-2xl font-bold">👤 Customer Profile</h2>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Username</p>
+                  <p className="font-bold text-lg text-gray-800">{selectedUserProfile.username}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Email</p>
+                  <p className="font-bold text-lg text-gray-800">{selectedUserProfile.email}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Role</p>
+                  <span className={`badge ${
+                    selectedUserProfile.role === 'admin' ? 'badge-danger' : 'badge-success'
+                  } text-lg px-4 py-2`}>
+                    {selectedUserProfile.role.toUpperCase()}
+                  </span>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Phone Number</p>
+                  <p className="font-bold text-lg text-gray-800">{selectedUserProfile.phoneNumber || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border-2 border-blue-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  📍 Address
+                </h3>
+                {selectedUserProfile.address && (selectedUserProfile.address.street || selectedUserProfile.address.city) ? (
+                  <div className="space-y-2 text-gray-700">
+                    {selectedUserProfile.address.street && (
+                      <p><span className="font-semibold">Street:</span> {selectedUserProfile.address.street}</p>
+                    )}
+                    {selectedUserProfile.address.city && (
+                      <p><span className="font-semibold">City:</span> {selectedUserProfile.address.city}</p>
+                    )}
+                    {selectedUserProfile.address.state && (
+                      <p><span className="font-semibold">State:</span> {selectedUserProfile.address.state}</p>
+                    )}
+                    {selectedUserProfile.address.zipCode && (
+                      <p><span className="font-semibold">Zip Code:</span> {selectedUserProfile.address.zipCode}</p>
+                    )}
+                    {selectedUserProfile.address.country && (
+                      <p><span className="font-semibold">Country:</span> {selectedUserProfile.address.country}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No address information provided</p>
+                )}
+              </div>
+
+              <button
+                onClick={() => setSelectedUserProfile(null)}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-xl hover:from-blue-600 hover:to-indigo-600 font-bold shadow-lg active:scale-95 transition-all"
               >
                 Close

@@ -10,7 +10,11 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -94,6 +98,69 @@ export default function Admin() {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadFile(file);
+      setUploadResult(null);
+    }
+  };
+
+  const handleBulkUpload = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      alert('Please select a file');
+      return;
+    }
+
+    setUploading(true);
+    setUploadResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+
+      const res = await API.post('/products/bulk-upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setUploadResult(res.data);
+      setUploadFile(null);
+      fetchProducts();
+      
+      // Reset file input
+      const fileInput = document.getElementById('bulk-upload-file');
+      if (fileInput) fileInput.value = '';
+    } catch (err) {
+      setUploadResult({
+        success: false,
+        error: err.response?.data?.msg || 'Error uploading file'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const response = await API.get('/products/template', {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'products-template.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Error downloading template');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -115,13 +182,24 @@ export default function Admin() {
       <Navbar user={user} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
             Manage Products
           </h2>
-          <button onClick={() => setShowModal(true)} className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 font-bold shadow-lg active:scale-95 transition-all">
-            ➕ Add New Product
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowBulkUpload(true)} 
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 font-bold shadow-lg active:scale-95 transition-all"
+            >
+              📤 Bulk Upload
+            </button>
+            <button 
+              onClick={() => setShowModal(true)} 
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 font-bold shadow-lg active:scale-95 transition-all"
+            >
+              ➕ Add Product
+            </button>
+          </div>
         </div>
 
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden">
@@ -182,7 +260,90 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Product Modal */}
+      {/* Bulk Upload Modal */}
+      {showBulkUpload && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slideUp" onClick={() => setShowBulkUpload(false)}>
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-5 rounded-t-2xl">
+              <h2 className="text-2xl font-bold">📤 Bulk Upload Products</h2>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <h3 className="font-bold text-blue-800 mb-2">Instructions:</h3>
+                <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                  <li>Download the CSV template below</li>
+                  <li>Fill in product details (name, description, category, price, stock, manufacturer, rackNo, expiryDate)</li>
+                  <li>Save and upload the file</li>
+                  <li>Required fields: name, description, category, price, manufacturer</li>
+                </ul>
+              </div>
+
+              <button
+                onClick={downloadTemplate}
+                className="w-full mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 font-bold shadow-lg active:scale-95 transition-all"
+              >
+                📥 Download CSV Template
+              </button>
+
+              <form onSubmit={handleBulkUpload} className="space-y-4">
+                <div>
+                  <label className="label">Select CSV/TXT File</label>
+                  <input
+                    id="bulk-upload-file"
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={handleFileChange}
+                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:border-purple-500 outline-none transition"
+                  />
+                  {uploadFile && (
+                    <p className="text-sm text-green-600 mt-2">✓ Selected: {uploadFile.name}</p>
+                  )}
+                </div>
+
+                {uploadResult && (
+                  <div className={`p-4 rounded-lg ${
+                    uploadResult.success 
+                      ? 'bg-green-50 border-l-4 border-green-500' 
+                      : 'bg-red-50 border-l-4 border-red-500'
+                  }`}>
+                    {uploadResult.success ? (
+                      <>
+                        <p className="text-green-800 font-bold">✓ Upload Successful!</p>
+                        <p className="text-green-700 text-sm">Inserted: {uploadResult.inserted} products</p>
+                        {uploadResult.errors > 0 && (
+                          <p className="text-yellow-700 text-sm">Errors: {uploadResult.errors} rows skipped</p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-red-800 font-bold">✗ {uploadResult.error}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={uploading || !uploadFile}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl hover:from-green-600 hover:to-green-700 font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {uploading ? '⏳ Uploading...' : '📤 Upload Products'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkUpload(false)}
+                    className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 rounded-xl hover:from-gray-600 hover:to-gray-700 font-bold shadow-lg active:scale-95 transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Modal - Same as before */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slideUp" onClick={() => {
           setShowModal(false);

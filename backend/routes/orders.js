@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
@@ -11,6 +12,15 @@ const admin = require('../middleware/admin');
 router.post('/', auth, async (req, res) => {
   try {
     const { items } = req.body;
+
+    // Check if user has complete address
+    const user = await User.findById(req.user.id);
+    if (!user.address || !user.address.street || !user.address.city) {
+      return res.status(400).json({ 
+        msg: 'Please complete your address before placing an order',
+        requiresAddress: true
+      });
+    }
 
     let totalAmount = 0;
     const orderItems = [];
@@ -42,12 +52,13 @@ router.post('/', auth, async (req, res) => {
     const newOrder = new Order({
       user: req.user.id,
       items: orderItems,
-      totalAmount
+      totalAmount,
+      shippingAddress: user.address
     });
 
     const order = await newOrder.save();
     await order.populate('items.product');
-    await order.populate('user', 'username email');
+    await order.populate('user', 'username email phoneNumber address');
     
     res.json(order);
   } catch (err) {
@@ -61,17 +72,18 @@ router.post('/', auth, async (req, res) => {
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const user = await require('../models/User').findById(req.user.id);
+    const user = await User.findById(req.user.id);
     let orders;
 
     if (user.role === 'admin') {
       orders = await Order.find()
         .populate('items.product')
-        .populate('user', 'username email')
+        .populate('user', 'username email phoneNumber address')
         .sort({ createdAt: -1 });
     } else {
       orders = await Order.find({ user: req.user.id })
         .populate('items.product')
+        .populate('user', 'username email phoneNumber address')
         .sort({ createdAt: -1 });
     }
 
@@ -89,13 +101,13 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('items.product')
-      .populate('user', 'username email');
+      .populate('user', 'username email phoneNumber address');
 
     if (!order) {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
-    const user = await require('../models/User').findById(req.user.id);
+    const user = await User.findById(req.user.id);
     if (order.user._id.toString() !== req.user.id && user.role !== 'admin') {
       return res.status(403).json({ msg: 'Not authorized' });
     }

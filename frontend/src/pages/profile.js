@@ -5,7 +5,8 @@ import { getAuth, setAuth } from '../utils/auth';
 import Navbar from '../components/Navbar';
 
 export default function Profile() {
-  const router = useRouter();
+   const router = useRouter();
+  const { tab: queryTab, redirect } = router.query;
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
@@ -36,6 +37,11 @@ export default function Profile() {
     } else {
       setUser(authUser);
       fetchUserProfile();
+      
+      // Set active tab from query
+      if (queryTab) {
+        setActiveTab(queryTab);
+      }
     }
     setLoading(false);
   }, [router]);
@@ -79,6 +85,13 @@ export default function Profile() {
       setUser(updatedUser);
 
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      
+      // Redirect if specified
+      if (redirect) {
+        setTimeout(() => {
+          router.push(`/${redirect}`);
+        }, 1500);
+      }
     } catch (err) {
       setMessage({ 
         type: 'error', 

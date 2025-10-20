@@ -1,0 +1,21 @@
+name,description,category,price,stock,manufacturer,rackNo,expiryDate
+Paracetamol 500mg,Pain reliever and fever reducer,Medicine,5.99,100,PharmaCorp,A1,2025-12-31
+Ibuprofen 200mg,Anti-inflammatory medication,Medicine,7.50,150,MediCare,A2,2025-10-15
+Bandage Roll,Sterile cotton bandage,Medical Supplies,3.50,200,MediSupply,B5,
+Surgical Gloves,Latex-free surgical gloves,Medical Supplies,12.99,150,SafeMed,C3,2026-06-30
+Digital Thermometer,Accurate temperature measurement,Equipment,25.00,50,TechMed,D1,
+Face Masks,Disposable medical face masks (50pcs),Safety Equipment,15.99,300,ProtectPlus,E2,2025-08-20
+Antiseptic Solution,Disinfectant solution 500ml,Medicine,8.75,75,CleanCare,A3,2025-11-30
+Blood Pressure Monitor,Digital BP monitoring device,Equipment,45.99,30,HealthTech,D2,
+Cotton Swabs,Sterile cotton swabs (100pcs),Medical Supplies,4.25,250,PureCare,B6,
+Gauze Pads,Sterile absorbent gauze pads (10pcs),Medical Supplies,6.20,180,Medisoft,B4,2026-01-15
+Vitamin C Tablets,Immune system booster (100 tablets),Supplement,12.50,120,WellLife,F1,2026-03-31
+Hand Sanitizer,Instant germ-killing sanitizer 250ml,Safety Equipment,5.99,400,CleanCare,E3,2025-12-31
+Oximeter,Fingertip pulse oximeter for SpO2 monitoring,Equipment,29.99,60,HealthTech,D3,
+First Aid Kit,Compact emergency medical kit,Safety Equipment,35.00,40,ProtectPlus,E1,
+Amoxicillin 250mg,Broad-spectrum antibiotic capsules,Medicine,9.99,80,PharmaCorp,A4,2025-09-15
+Thermal Blanket,Emergency thermal rescue blanket,Safety Equipment,3.99,500,SafeMed,E4,2027-01-01
+Glucose Meter,Blood sugar level monitoring device,Equipment,39.50,45,TechMed,D4,
+Hydrogen Peroxide 3%,Antiseptic and cleaning solution,Medicine,4.80,90,CleanCare,A5,2025-11-01
+Disposable Syringes,Single-use sterile syringes (10pcs),Medical Supplies,7.25,220,MediSupply,B3,2027-05-20
+Neck Support Collar,Adjustable foam neck support,Medical Supplies,18.99,70,SafeMed,C2,

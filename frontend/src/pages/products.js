@@ -40,6 +40,8 @@ export default function Products() {
     setLoading(false);
   }, [router]);
 
+  
+
   const fetchProducts = async () => {
     try {
       const params = new URLSearchParams();
@@ -127,17 +129,24 @@ export default function Products() {
     ));
   };
 
-  const handleCheckout = async () => {
-    try {
-      await API.post('/orders', { items: cart });
-      alert('Order placed successfully!');
-      setCart([]);
-      setShowCart(false);
-      fetchProducts();
-    } catch (err) {
+const handleCheckout = async () => {
+  try {
+    const res = await API.post('/orders', { items: cart });
+    alert('Order placed successfully!');
+    setCart([]);
+    setShowCart(false);
+    fetchProducts();
+  } catch (err) {
+    if (err.response?.data?.requiresAddress) {
+      // Redirect to profile if address is required
+      if (confirm('Please complete your address before placing an order. Go to profile now?')) {
+        router.push('/profile?tab=profile&redirect=products');
+      }
+    } else {
       alert(err.response?.data?.msg || 'Error placing order');
     }
-  };
+  }
+};
 
   if (loading) {
     return (
